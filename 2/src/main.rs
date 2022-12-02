@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, File},
+    fs::File,
     io::{self, BufRead},
     path::Path,
 };
@@ -42,15 +42,13 @@ fn get_move_val(m: &Moves) -> i32 {
     }
 }
 
-fn get_score(me: &Moves, you: &Moves) -> WLD {
-    if me == you {
-        return WLD::Draw(me.clone());
-    }
+fn get_score(me: Moves, you: Moves) -> WLD {
     match (me, you) {
-        (Moves::Paper, Moves::Rock) => WLD::Win(me.clone()),
-        (Moves::Rock, Moves::Scissors) => WLD::Win(me.clone()),
-        (Moves::Scissors, Moves::Paper) => WLD::Win(me.clone()),
-        _ => WLD::Lose(me.clone()),
+        (a, b) if a == b => WLD::Draw(me),
+        (Moves::Paper, Moves::Rock) => WLD::Win(me),
+        (Moves::Rock, Moves::Scissors) => WLD::Win(me),
+        (Moves::Scissors, Moves::Paper) => WLD::Win(me),
+        _ => WLD::Lose(me),
     }
 }
 
@@ -78,7 +76,7 @@ fn main() {
         if let Ok(l) = line {
             let my_move = get_my_move(&l);
             let your_move = get_your_move(&l);
-            let wld = get_score(&my_move, &your_move);
+            let wld = get_score(my_move, your_move);
             score += wld.to_num()
         }
     }
