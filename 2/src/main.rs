@@ -18,20 +18,58 @@ enum Moves {
     Paper,
     Scissors,
 }
-
-enum WLD {
-    Win(Moves),
-    Lose(Moves),
-    Draw(Moves),
-}
-impl WLD {
-    fn to_num(&self) -> i32 {
-        match self {
-            WLD::Win(x) => 6 + get_move_val(x),
-            WLD::Draw(x) => 3 + get_move_val(x),
-            WLD::Lose(x) => get_move_val(x),
+impl Moves {
+    fn beats(&self) -> Self {
+        use Moves::*;
+        match *self {
+            Rock => Scissors,
+            Paper => Rock,
+            Scissors => Paper
         }
     }
+
+    fn loses_to(&self) -> Self {
+        use Moves::*;
+        match *self {
+            Rock => Paper,
+            Paper => Scissors,
+            Scissors => Rock
+        }
+    }
+
+    fn from_result(&self, wld: &WLD) -> Self {
+        match wld {
+            WLD::Win => self.loses_to(),
+            WLD::Lose => self.beats(),
+            _ => *self
+        }
+    }
+
+    fn to_wld(&self, other: &Moves) -> WLD {
+        match (self, other) {
+            (a, b) if a == b => WLD::Draw,
+            (a, b) if &a.beats() == b => WLD::Win,
+            _ => WLD::Lose
+        }
+    }
+}
+
+enum WLD {
+    Win,
+    Lose,
+    Draw,
+}
+
+
+impl WLD {
+    fn add_num(&self, m: &Moves) -> i32 {
+        match self {
+            WLD::Win => 6 + get_move_val(m),
+            WLD::Draw => 3 + get_move_val(m),
+            WLD::Lose => get_move_val(m),
+        }
+    }
+
 }
 
 fn get_move_val(m: &Moves) -> i32 {
@@ -42,15 +80,6 @@ fn get_move_val(m: &Moves) -> i32 {
     }
 }
 
-fn get_score(me: Moves, you: Moves) -> WLD {
-    match (me, you) {
-        (a, b) if a == b => WLD::Draw(me),
-        (Moves::Paper, Moves::Rock) => WLD::Win(me),
-        (Moves::Rock, Moves::Scissors) => WLD::Win(me),
-        (Moves::Scissors, Moves::Paper) => WLD::Win(me),
-        _ => WLD::Lose(me),
-    }
-}
 
 fn get_my_move(s: &String) -> Moves {
     match s {
@@ -58,6 +87,15 @@ fn get_my_move(s: &String) -> Moves {
         x if x.contains("Y") => Moves::Paper,
         x if x.contains("Z") => Moves::Scissors,
         _ => panic!("Invalid move"),
+    }
+}
+
+fn get_desired_outcome(s: &String) -> WLD {
+    match s {
+        x if x.contains("X") => WLD::Lose,
+        x if x.contains("Y") => WLD::Draw,
+        x if x.contains("Z") => WLD::Win,
+        _ => panic!("Invalid input")
     }
 }
 
@@ -72,13 +110,20 @@ fn get_your_move(s: &String) -> Moves {
 
 fn main() {
     let mut score = 0;
+    let mut scorept2 = 0;
     for line in read_file_lines("./input.txt") {
         if let Ok(l) = line {
             let my_move = get_my_move(&l);
             let your_move = get_your_move(&l);
-            let wld = get_score(my_move, your_move);
-            score += wld.to_num()
+            let wld = my_move.to_wld(&your_move);
+            score += wld.add_num(&my_move);
+
+            // pt2
+            let desired = get_desired_outcome(&l);
+            let my_pt2_move = your_move.from_result(&desired);
+            scorept2 += desired.add_num(&my_pt2_move);
         }
     }
-    println!("{:?}", score)
+    println!("{:?}", score);
+    println!("{:?}", scorept2);
 }
