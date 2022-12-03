@@ -12,7 +12,7 @@ where
     io::BufReader::new(file).lines()
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 enum Moves {
     Rock,
     Paper,
@@ -41,7 +41,7 @@ impl Moves {
         match wld {
             WLD::Win => self.loses_to(),
             WLD::Lose => self.beats(),
-            _ => *self
+            _ => self.clone()
         }
     }
 
