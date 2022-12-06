@@ -44,24 +44,34 @@ let fullyContains = (a: Range.Range, b: Range.Range) => {
   }
 }
 
-let eitherFullyContains = (a: Range.Range, b: Range.Range) => {
-  fullyContains(a, b) || fullyContains(b, a)
+let partiallyContains = (a: Range.Range, b: Range.Range) => {
+  match (b) {
+    Range.Inclusive(start, end) => Range.inRange(start, a) || Range.inRange(end, a),
+    _ => false
+  }
 }
 
+
+let compare = (a: Range.Range, b: Range.Range, fn) => {
+  fn(a, b) || fn(b, a)
+}
+
+record Overlaps { mut full: Number, mut partial: Number }
 
 
 print(Array.reduce(
   (acc, cur) => {
     let line = lineToRange(cur)
     let (a, b) = line
-    match (eitherFullyContains(a,b)) {
-      true => {
-        acc + 1
-      },
-      false => acc
+    if (compare(a,b,fullyContains)) {
+      acc.full += 1
     }
+    if (compare(a,b,partiallyContains)) {
+      acc.partial += 1
+    }
+    acc
   }, 
-  0,
+  { full: 0, partial: 0 },
   readFile()
 ))
 
