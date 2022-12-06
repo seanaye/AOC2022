@@ -1,0 +1,68 @@
+import File from "sys/file"
+import Result from "result"
+import Int64 from "int64"
+import String from "string"
+import Array from "array"
+import Range from "range"
+import Number from "number"
+
+let readFile = () => {
+  let res = File.pathOpen(
+    File.pwdfd, 
+    [], 
+    "input.txt", 
+    [], 
+    [File.FdRead, File.FdFilestats],
+    [File.FdRead, File.FdFilestats], 
+    [File.Sync]
+  )
+  let fd = Result.unwrap(res)
+  let stats = Result.unwrap(File.fdFilestats(fd))
+  let fdRes = File.fdRead(fd, Int64.toNumber(stats.size))
+  let (text, _) = Result.unwrap(fdRes)
+  let lines = String.split("\n", text)
+  Array.filter(s => String.length(s) > 0, lines)
+}
+
+
+let lineToRange = (s: String) => {
+  let elf = String.split(",", s)
+  let ranges = Array.map(e => {
+    let arr = String.split("-", e)
+    Range.Inclusive(
+      Result.unwrap(Number.parseInt(arr[0], 10)), 
+      Result.unwrap(Number.parseInt(arr[1], 10))
+    )
+  }, elf)
+  (ranges[0], ranges[1])
+}
+
+let fullyContains = (a: Range.Range, b: Range.Range) => {
+  match (b) {
+    Range.Inclusive(start, end) => Range.inRange(start, a) && Range.inRange(end, a),
+    _ => false
+  }
+}
+
+let eitherFullyContains = (a: Range.Range, b: Range.Range) => {
+  fullyContains(a, b) || fullyContains(b, a)
+}
+
+
+
+print(Array.reduce(
+  (acc, cur) => {
+    let line = lineToRange(cur)
+    let (a, b) = line
+    match (eitherFullyContains(a,b)) {
+      true => {
+        acc + 1
+      },
+      false => acc
+    }
+  }, 
+  0,
+  readFile()
+))
+
+
